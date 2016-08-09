@@ -178,3 +178,6 @@ body {
         font-size: 150px;
     }
   }
+  .modal {
+    top: 50px;
+  }
