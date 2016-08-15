@@ -188,3 +188,9 @@ body {
 ul li {
   list-style: none;
 }
+
+.bio {
+  text-align: left;
+  margin-left: 0px;
+  
+}
