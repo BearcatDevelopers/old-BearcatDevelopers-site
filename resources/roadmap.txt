@@ -1,0 +1,21 @@
+Week 1: Intro
+Introduction to Programming and Java
+Download & Configure IDEs (fetch link)
+
+
+Stretch - System.out.print[ln]("Hello World!")
+
+Week 2: First Program
+
+Math, variables, outputs: 
+Set variables statically, run math equations on them, get output
+System.out.print() & return
+
+Week 3: Strings & Scanners
+Go over user input
+strings, string concatenation
+output
+
+Week 4: Methods vs. Classes
+Find better real-world example of methods vs. classes
+write 3 methods to call into the main method
