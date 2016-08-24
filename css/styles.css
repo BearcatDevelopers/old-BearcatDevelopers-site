@@ -201,11 +201,29 @@ ul li {
   
 }
 
-.row-outline {
-  outline: #FFFFFF;
-  outline-width: 20px;
+.roadmap_title {
+  text-align: left;
+  vertical-align: text-top;
+  color: #333;
 }
 
-.roadmap_title {
-  font-size: 24px;
+.m-t-0 {
+  margin-top: 0 !important;
+}
+
+.roadmap_image {
+  background-image: url('img/roadmap.png');
+  position: relative;
+  opacity: .7;
+  height: 150px;
+  width: 225px;
+}
+
+.roadmap_content {
+  text-align: left;
+  vertical-align: top;
+}
+
+.buffer {
+  height: 1px;
 }
