@@ -227,3 +227,7 @@ ul li {
 .buffer {
   height: 1px;
 }
+
+.project_label {
+  text-align: left;
+}
