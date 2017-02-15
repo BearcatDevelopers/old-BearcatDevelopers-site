@@ -102,10 +102,10 @@
 			twitter = Twython(CONSUMER_KEY, CONSUMER_SECRET)<br/><br/>
 			# search for tweets containing the phrase 'data science'<br/>
 			for status in twitter.search(q='"data science"')["statuses"]:<br/>
-				user = status["user"]["screen_name"].encode('utf-8')<br/>
-				text = status["text"].encode('utf-8')<br/>
-				print(user, ":", text)<br/>
-				print
+			&emsp;&emsp;	user = status["user"]["screen_name"].encode('utf-8')<br/>
+			&emsp;&emsp;	text = status["text"].encode('utf-8')<br/>
+			&emsp;&emsp;	print(user, ":", text)<br/>
+			
 
 		</span>
 	<br/>
