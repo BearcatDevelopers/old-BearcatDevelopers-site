@@ -1,0 +1,195 @@
+  * ABOUT
+
+    <#about>
+  * NEXT MEETING
+
+    <#next_meeting>
+  * PROJECTS
+
+    <#projects>
+  * OUR TEAM
+
+    <#our_team>
+  * CONTACT
+
+    <#contact>
+  * Twitter API
+
+    <file:///Users/danielbillmann/Bearcat_Developers/Repositories/BearcatDevelopers.github.io/twitter_api_tut.html>
+
+
+    Twitter API Tutorial in Python
+
+
+        from 'Data Science from Scratch, First Principles in Python'
+
+
+
+
+
+
+      _*Introduction*_
+
+In this tutorial we will be going over how to use the Twitter API and
+gather tweets for data analysis. To complete this tutorial you will need
+the following:
+
+ 1. Python distribution 3.4 or higher. Follow this link to download the
+    Anaconda distribution of Python if you need to:
+    http://continuum.io/downloads
+ 2. A Twitter account
+ 3. The ability to install new Python libraries, specifically Twython
+
+
+Let's get started!
+
+
+      _*Twitter Setup and Getting Credentials*_
+
+First you will need to get a Twitter Account if you do not already have
+one. Sign up for one _here <https://twitter.com/>_ if you need to. For
+those of you who already have a Twitter account, you can work through
+the following checklist to get credentials:
+
+ 1. Go to _/https://apps.twitter.com/ <https://apps.twitter.com/>_
+ 2. If you are not signed in, click Sign in and enter your Twitter
+    username and password.
+ 3. Click Create New App
+ 4. Give it a name (such as 'Data Science') and a description, and put
+    any URL as the website (it doesn't matter which one).
+ 5. Agree to the Terms of Service and click Create.
+ 6. Take note of the consumer key and consumer secret
+ 7. Click "Create my access token"
+ 8. Take note of the access token and access token secret (you may have
+    to refresh the page)
+
+The consumer key and consumer secret tell Twitter what application is
+accessing its APIs, while the access token and access token secret tell
+Twitter /who/ is accessing its APIs. If you have ever used your Twitter
+account to log in to some other site, the :click to authorize" page was
+generating an access token for that site to use to convince Twitter that
+it was you (or, at least, acting on your behalf). As we don't need this
+"let anyone log in" functionality, we can get by with with the
+statically generated access token and access token secret. */Pro tip:/*
+The consumer key/secret and access token key/secret should be treated
+like passwords. You shouldn't share them, you shouldn't publish them in
+your book, and you shouldn't check them into your public GitHub
+repositoryy. One simple solution is to store them in a
+/credentials.json/ file that doesn't get checked in and to have your
+code using json.loads to retrieve them.
+
+
+      _*Using Twython*_
+
+First we'll look at the Search API
+(/https://dev.twitter.com/docs/api/1.1/get/search/tweets/), which
+requires only the consumer key and secret, not the access token or secret:
+
+from twython import Twython
+
+twitter = Twython(CONSUMER_KEY, CONSUMER_SECRET)
+
+# search for tweets containing the phrase 'data science'
+for status in twitter.search(q='"data science"')["statuses"]:
+user = status["user"]["screen_name"].encode('utf-8')
+text = status["text"].encode('utf-8')
+print(user, ":", text)
+print
+
+The .encode("utf-8") is necessary to deal with the fact that tweets
+often contain Unicode characters that print cant deal with . (If you
+leave it out, you will very likely get a UnicodeEncodeError.)
+It is almost certain that at some point in your data science career you
+will run into some serious Unicode problems, at which point you will
+need to refer to the Python documentation (/http://bit.ly/1ycODJw/) or
+else grudgingly start using Python 3, which plays much more nicely with
+Unicode text.
+If you run this, you should get some tweets back like:
+
+  * haithemnyc: Data scientists with the technical savvy & analytical
+    chops to derive meaning from big data are in demand
+    http//t.co/HsF9Q0dShP
+  * RPubsRecent: Data Science http://t.co/6hcHUz2PHM
+  * spleonard: Using #dplyr in #R to work through a procrastinated
+    assignment for #rdpeng in #coursera data science specialization. So
+    easy and Awesome.
+
+
+This isn't that interesting, largely because the Twitter Search API just
+shows you whatever handful of recent results it feels like. When you're
+doing data science, more often you want a lot of tweets. This is where
+the Streaming API (/http://bit.ly/1ycOEgG/) is useful. It allows you to
+connect to (a sample of) the great Twitter fire-hose. To use it, you'll
+need to authenticate using your access tokens.
+In order to access the Streaming API with Twythonn, we need to define a
+class that inherits from TwythonStreamer and that overrides its
+on_success method (and possibly its on_error method):
+from twython import TwythonStreamer
+# appending data to a global variable is pretty poor form
+# but it makes the example way simpler
+tweets = []
+
+class MyStreamer(TwythonStreamer):
+   '''our own subclass of TwythonStreamer that specifies how to interact
+with the stream'''
+
+   def on_success(self, data):
+     """what do we do when twitter sends us data?
+      here data will be a Python dictionary representing a tweet'''
+
+     # only collect tweets in English
+     if data['lang'] == 'en':
+     tweets.append(data)
+     print("received tweet #", len(tweets))
+
+     #stop when we've collected enough
+     if len(tweets) >= 500:
+       self.disconnect()
+
+  def on_error(self, status_code, data):
+     print(status_code, data)
+     self.disconnect()
+
+MyStreamer will connect to the Twitter stream and wait for Twitter to
+feed it data. Each time it receives some data (here, a Tweet represented
+in a Python object) it passes it to the on_success method, which appends
+it to our tweets list if its language is English, and then disconnects
+the streamer after it's collected 500 tweets.
+
+All that's left is to initialize it and start it running:
+
+stream = MyStreamer(CONSUMER_KEY, CONSUMER_SECRET,
+ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+
+# starts consuming public statuses that contain the keyword 'data'
+stream.statuses.filter(track='data')
+
+# if instead we wanted to start consuming a sample of *all* public
+status # stream.statuses.sample()
+
+This will run until it collects 1,000 tweets (or until it encounters an
+error) and stop, at which piont you can start analyzing those tweets.
+For instance, you could find the most common hashtags with:
+
+top_hashtags = Counter(hashtag['text'].lower
+  for tweet in tweets:
+  for hashtag in tweet["entities"]["hashtags"])
+
+print(top_hashtags.most_common(5))
+
+Each tweet contains a lot of data. You can either poke around yourself
+or dig through the Twitter API documentation
+(/https://dev.twitter.com/overview/api/tweets/
+In a non-toy project you probably wouldn't want to rely on an in-memory
+list for storing the tweets. Instead you'd want to save them to a file
+or a database, so that you'd have them permanently.
+
+
+      _*For Further Exploration*_
+
+pandas (/http://pandas.pydata.org//) is the primary library that data
+science types use for working with (and in particular, importing) data.
+Scrapy (/http://scrapy.org//) is a more full-featured library for
+building more complicated web scrapers that do things like follow
+unknown links
+

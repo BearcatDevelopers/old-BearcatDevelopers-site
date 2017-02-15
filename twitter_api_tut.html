@@ -38,18 +38,170 @@
   </div>
 </nav>
 
-<div class='tutorial container-fluid'>
+<div class='tutorial container-fluid '>
+	<h2 class='text-center'> Twitter API Tutorial in Python </h2>
+	<h4 class='text-center'> from 'Data Science from Scratch, First Principles in Python'</h4>
+	<div class="col-md-3"></div>
+	 <div class="col-md-5">
+        <img src="img/Twitter_Logo.png" class="img-responsive" width="100"height="100"/>
+     </div>
+     <div class="col-md-4">
+        <img src="img/python.png" class="img-responsive" width="100"height="100"/>
+     </div>
+
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+	<h3><u><b>Introduction</b></u></h3>
 	<p>
 		In this tutorial we will be going over how to use the Twitter API and gather tweets for data analysis.
 
 		To complete this tutorial you will need the following: 
 		<ol>
-			<li>Python distribution 3.4 or higher</li>
+			<li>Python distribution 3.4 or higher. Follow this link to download the Anaconda distribution of Python if you need to: <a href='http://continuum.io/downloads'>http://continuum.io/downloads</a></li>
 			<li>A Twitter account</li>
-			<li>The ability to install new Python libraries</li>
+			<li>The ability to install new Python libraries, specifically Twython</li>
+		</ol>
+		<br/>
+		Let's get started!
+	</p>
+
+	<h3><u><b>Twitter Setup and Getting Credentials</b></u></h3>
+	<p>
+		First you will need to get a Twitter Account if you do not already have one. Sign up for one <u><a href='https://twitter.com/'>here</a></u> if you need to. 
+
+		For those of you who already have a Twitter account, you can work through the following checklist to get credentials: 
+		<ol>
+			<li>Go to <u><a href='https://apps.twitter.com'><i>https://apps.twitter.com</i></a></u></li>
+			<li>If you are not signed in, click Sign in and enter your Twitter username and password.</li>
+			<li>Click Create New App</li>
+			<li>Give it a name (such as 'Data Science') and a description, and put any URL as the website (it doesn't matter which one).</li>
+			<li>Agree to the Terms of Service and click Create.</li>
+			<li>Take note of the consumer key and consumer secret</li>
+			<li>Click "Create my access token"</li>
+			<li>Take note of the access token and access token secret (you may have to refresh the page)</li>
+
 		</ol>
 
+		The consumer key and consumer secret tell Twitter what application is accessing its APIs, while the access token and access token secret tell Twitter <i>who</i> is accessing its APIs. If you have ever used your Twitter account to log in to some other site, the :click to authorize" page was generating an access token for that site to use to convince Twitter that it was you (or, at least, acting on your behalf). As we don't need this "let anyone log in" functionality, we can get by with with the statically generated access token and access token secret.
+
+		<b><i>Pro tip:</i></b> The consumer key/secret and access token key/secret should be treated like passwords. You shouldn't share them, you shouldn't publish them in your book, and you shouldn't check them into your public GitHub repositoryy. One simple solution is to store them in a <i>credentials.json</i> file that doesn't get checked in and to have your code using json.loads to retrieve them.
 	</p>
+
+	<h3><u><b>Using Twython</b></u></h3>
+	<p>
+		First we'll look at the Search API (<i>https://dev.twitter.com/docs/api/1.1/get/search/tweets</i>), which requires only the consumer key and secret, not the access token or secret: 
+		<br/>
+		<br/>
+		<span style="font-family: monaco">
+			from twython import Twython
+			<br/>
+			<br/>
+			twitter = Twython(CONSUMER_KEY, CONSUMER_SECRET)<br/><br/>
+			# search for tweets containing the phrase 'data science'<br/>
+			for status in twitter.search(q='"data science"')["statuses"]:<br/>
+				user = status["user"]["screen_name"].encode('utf-8')<br/>
+				text = status["text"].encode('utf-8')<br/>
+				print(user, ":", text)<br/>
+				print
+
+		</span>
+	<br/>
+	<br/>
+		The .encode("utf-8") is necessary to deal with the fact that tweets often contain Unicode characters that print cant deal with . (If you leave it out, you will very likely get a <span style="font-family: monaco">UnicodeEncodeError</span>.)
+<br/>
+		It is almost certain that at some point in your data science career you will run into some serious Unicode problems, at which point you will need to refer to the Python documentation (<i>http://bit.ly/1ycODJw</i>) or else grudgingly start using Python 3, which plays much more nicely with Unicode text.
+<br/>
+		If you run this, you should get some tweets back like:
+<br/>
+		
+			<ul>
+				<span style='font-family: monaco'><li>haithemnyc: Data scientists with the technical savvy &amp; analytical chops to derive meaning from big data are in demand http//t.co/HsF9Q0dShP
+				</li></span>
+				<span style='font-family: monaco'><li>RPubsRecent: Data Science http://t.co/6hcHUz2PHM</li></span>
+				<span style='font-family: monaco'><li>spleonard: Using #dplyr in #R to work through a procrastinated assignment for #rdpeng in #coursera data science specialization. So easy and Awesome.</li></span>
+			</ul>
+		
+<br/>
+		This isn't that interesting, largely because the Twitter Search API just shows you whatever handful of recent results it feels like. When you're doing data science, more often you want a lot of tweets. This is where the Streaming API (<a href="http://bit.ly/1ycOEgG"><i>http://bit.ly/1ycOEgG</i></a>) is useful. It allows you to connect to (a sample of) the great Twitter fire-hose. To use it, you'll need to authenticate using your access tokens. 
+<br/>
+		In order to access the Streaming API with Twythonn, we need to define a class that inherits from <span style="font-family: monaco">TwythonStreamer</span> and that overrides its on_success method (and possibly its on_error method):
+
+		<div style="font-family: monaco">
+			from twython import TwythonStreamer<br/>
+
+			# appending data to a global variable is pretty poor form<br/>
+			# but it makes the example way simpler<br/>
+			tweets = []<br/>
+			<br/>
+			class MyStreamer(TwythonStreamer):<br/>
+			&emsp;&emsp;	'''our own subclass of TwythonStreamer that specifies how to interact with the stream'''<br/>
+				<br/>
+			&emsp;&emsp;	def on_success(self, data):<br/>
+				&emsp;&emsp;&emsp;&emsp;	"""what do we do when twitter sends us data?<br/>
+				&emsp;&emsp; &emsp;&emsp; here data will be a Python dictionary representing a tweet'''<br/>
+					<br/>
+				&emsp;&emsp;&emsp;&emsp;	# only collect tweets in English<br/>
+				&emsp;&emsp;&emsp;&emsp;	if data['lang'] == 'en':<br/>
+				&emsp;&emsp;&emsp;&emsp;		tweets.append(data)<br/>
+				&emsp;&emsp;&emsp;&emsp;		print("received tweet #", len(tweets))<br/>
+					<br/>
+				&emsp;&emsp;&emsp;&emsp;	#stop when we've collected enough<br/>
+				&emsp;&emsp;&emsp;&emsp;	if len(tweets) >= 500:<br/>
+				&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;		self.disconnect()<br/>
+					<br/>
+			&emsp;&emsp;def on_error(self, status_code, data):<br/>
+			&emsp;&emsp;&emsp;&emsp;	print(status_code, data)<br/>
+			&emsp;&emsp;&emsp;&emsp;	self.disconnect()<br/>
+		</div>
+	</p>
+
+	<p>
+		MyStreamer will connect to the Twitter stream and wait for Twitter to feed it data. Each time it receives some data (here, a Tweet represented in a Python object) it passes it to the <span style="font-family: monaco">on_success</span> method, which appends it to our <span style="font-family: monaco">tweets</span> list if its language is English, and then disconnects the streamer after it's collected 500 tweets.
+	</p>
+
+	<p>
+		All that's left is to initialize it and start it running:
+
+		<div style="font-family: monaco">
+			stream = MyStreamer(CONSUMER_KEY, CONSUMER_SECRET, <br/> ACCESS_TOKEN, ACCESS_TOKEN_SECRET)<br/>
+			<br/>
+			# starts consuming public statuses that contain the keyword 'data'<br/>
+			stream.statuses.filter(track='data')<br/>
+			<br/>
+			# if instead we wanted to start consuming a sample of *all* public status
+			# stream.statuses.sample()
+
+		</div>
+		<br/>
+	</p>
+
+	<p>
+		This will run until it collects 1,000 tweets (or until it encounters an error) and stop, at which piont you can start analyzing those tweets. For instance, you could find the most common hashtags with: 
+		<br/>
+		<div style='font-family: monaco'>
+			top_hashtags = Counter(hashtag['text'].lower<br/>
+			&emsp;	for tweet in tweets:<br/>
+			&emsp;	for hashtag in tweet["entities"]["hashtags"])<br/>
+			<br/>
+			print(top_hashtags.most_common(5))
+		</div>
+	</p>
+	<p>
+		Each tweet contains a lot of data. You can either poke around yourself or dig through the Twitter API documentation (<a href='https://dev.twitter.com/overview/api/tweets')><i>https://dev.twitter.com/overview/api/tweets</i></a>
+		<br/>
+		In a non-toy project you probably wouldn't want to rely on an in-memory <span style='font-family: monaco'>list</span> for storing the tweets. Instead you'd want to save them to a file or a database, so that you'd have them permanently.
+	</p>
+
+	<h3><u><b>For Further Exploration</b></u></h3>
+	<p>
+		pandas (<a href="http://pandas.pydata.org/"><i>http://pandas.pydata.org/</i></a>) is the primary library that data science types use for working with (and in particular, importing) data.
+
+		Scrapy (<a href="http://scrapy.org/"><i>http://scrapy.org/</i></a>) is a more full-featured library for building more complicated web scrapers that do things like follow unknown links
+	</p>
+
 
 
 </div>
