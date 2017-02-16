@@ -149,6 +149,9 @@ body {
       -webkit-animation-duration: 1s;
       visibility: visible;
   }
+  .html_css_pictures{
+    display: inline;
+  }
   @keyframes slide {
     0% {
       opacity: 0;
@@ -198,7 +201,7 @@ ul li {
 .bio {
   text-align: left;
   margin-left: 0px;
-  
+
 }
 
 .roadmap_title {
